@@ -1,4 +1,4 @@
-# Adeapted from https://colab.research.google.com/drive/1tYL35_0M3TobYv0eT8Uc_H4JO2JUfi4K#scrollTo=jGjHJU6w0kjy
+# Some code from https://colab.research.google.com/drive/1tYL35_0M3TobYv0eT8Uc_H4JO2JUfi4K#scrollTo=jGjHJU6w0kjy
 
 import torch.utils
 import torch
@@ -12,9 +12,7 @@ import norbert                         # https://github.com/sigsep/norbert
 import sounddevice as sd
 
 import numpy as np
-
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
+import pandas as pd
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -72,11 +70,26 @@ class AverageMeter:
         self.sum = 0
         self.count = 0
 
-    def update(self, val, n=1):
+    def update(self, val, n):
         self.val = val
-        self.sum += val * n
+        self.sum += val*n
         self.count += n
         self.avg = self.sum / self.count
+
+class LossStats:
+    def __init__(self, num_epochs):
+        self.stats = pd.DataFrame({
+            'epoch': [i+1 for i in range(num_epochs)], 
+            'training_loss': [-1 for i in range(num_epochs)],
+            'validation_loss': [-1 for i in range(num_epochs)]})
+        
+    def update(self, epoch, train_loss, valid_loss):
+        self.stats.at[epoch, 'training_loss'] = train_loss
+        self.stats.at[epoch, 'validation_loss'] = valid_loss
+    
+    def to_csv(self, filepath):
+        self.stats.to_csv(filepath, index=False)
+
 
 def istft(X, rate=44100, n_fft=4096, n_hopsize=1024):
     t, audio = scipy.signal.istft(
@@ -163,8 +176,7 @@ if __name__ == '__main__':
     TRAIN = True
 
     torch.manual_seed(3)
-    # My laptop doesn't have a gpu to utilize cuda
-    device = torch.device("cpu")
+    device = device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if TRAIN:
         train_dataset = SimpleMUSDBDataset(seq_duration=5.0)
@@ -201,7 +213,9 @@ if __name__ == '__main__':
         model_cache = unmix
 
         # num_epochs is the number of times that our model gets to see the entire dataset
-        num_epochs = 25
+        num_epochs = 30
+        model_stats = LossStats(num_epochs)
+
         for i in range(num_epochs):
             print('Starting epoch {} of {}'.format(i+1, num_epochs))
             losses.clear()
@@ -223,14 +237,18 @@ if __name__ == '__main__':
                 # performs a parameter update based on the current gradient
                 optimizer.step()
                 losses.update(loss.item(), Y.size(1))
-            print('Training loss: {}'.format(losses.avg))
+
             valid_loss = validation_loss(valid_sampler, unmix)
+            model_stats.update(i, losses.avg, valid_loss)
+            print('Training loss: {}'.format(losses.avg))
             print('Validation loss: {}'.format(valid_loss))
+
             if valid_loss < best_loss:
                 best_loss = valid_loss
                 model_cache = copy.deepcopy(unmix)
                 print('\tNew best! :D')
 
+        model_stats.to_csv('model_stats.csv')
         save_to_pickle(model_cache, 'unmixer2.pickle')
         quit()
 
