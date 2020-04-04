@@ -80,8 +80,8 @@ class LossStats:
     def __init__(self, num_epochs):
         self.stats = pd.DataFrame({
             'epoch': [i+1 for i in range(num_epochs)], 
-            'training_loss': [-1 for i in range(num_epochs)],
-            'validation_loss': [-1 for i in range(num_epochs)]})
+            'training_loss': [-1.0 for i in range(num_epochs)],
+            'validation_loss': [-1.0 for i in range(num_epochs)]})
         
     def update(self, epoch, train_loss, valid_loss):
         self.stats.at[epoch, 'training_loss'] = train_loss
@@ -122,7 +122,7 @@ def findMeanScale(dataset):
 
 
 def getEstimate(track_audio, device = 'cpu'):
-    unmix = get_from_pickle('unmixer.pickle')
+    unmix = get_from_pickle('unmixer2.pickle')
     unmix.stft.center = True
     unmix.eval()
 
