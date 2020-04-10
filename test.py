@@ -26,7 +26,7 @@ def istft(X, rate=44100, n_fft=4096, n_hopsize=1024):
     return audio
 
 
-def getEstimate(track_audio, model_file = 'unmixer2.pickle', device = 'cpu'):
+def getEstimate(track_audio, model_file = 'unmixer.pickle', device = 'cpu'):
     unmix = get_from_pickle(model_file)
     unmix.stft.center = True
     unmix.eval()

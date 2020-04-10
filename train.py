@@ -28,10 +28,11 @@ from pickle_operations import *
 class SimpleMUSDBDataset(torch.utils.data.Dataset):
     def __init__(
         self,
-        subset='train', # select a _musdb_ subset train or test
+        subset='train', # select a musdb subset train or test
         split='train',  # w/ subset=train, split='train' loads the training split, 'valid' loads the validation split. None applies no splitting.
         target='vocals',
         seq_duration=5.0,  # seq_duration is in seconds
+        use_demo_data = False # if you have access to full dataset, make this False
     ):
         self.seq_duration = seq_duration
         self.target = target
@@ -39,7 +40,8 @@ class SimpleMUSDBDataset(torch.utils.data.Dataset):
         # note that each track in musdb is present in exactly one of
         # the training, validation, and test sets
         self.mus = musdb.DB(
-            download=True,
+            root = None if use_demo_data else 'musdb18',
+            download= use_demo_data,
             split=split,
             subsets=subset, 
         )
