@@ -65,14 +65,14 @@ def getEstimate(track_audio, model_file = 'unmixer.pickle', device = 'cpu'):
 
 
 if __name__ == '__main__':
-    musTest = musdb.DB(download=True, subsets='test')
-    musTrain = musdb.DB(download=True, subsets= 'train')
     checkUnseen = True
 
-    track = musTest[0] if checkUnseen else musTrain[0]
+    musTracks = musdb.DB(download=True, subsets='test' if checkUnseen else 'train')
+    track = musTracks[7]
     print(track.name)
 
-    estimate = getEstimate(track.audio)
+    estimate = getEstimate(track.audio, 'unmixer2.pickle')
+    estimateBad = getEstimate(track.audio, 'unmixer.pickle')
     saveWAV('original_mix_111.wav', track.rate, track.audio)
     saveWAV('separated_vocals_111.wav', track.rate, estimate)
 
@@ -80,3 +80,5 @@ if __name__ == '__main__':
     sd.play(track.audio, track.rate, blocking = True)
     print('Playing estimated vocal track')
     sd.play(estimate, track.rate, blocking = True)
+    print('Playing poor estimated vocal track')
+    sd.play(estimateBad, track.rate, blocking=True)

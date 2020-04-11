@@ -133,12 +133,14 @@ if __name__ == '__main__':
     if TRAIN:
         train_dataset = SimpleMUSDBDataset(seq_duration=5.0)
         validation_set = SimpleMUSDBDataset(split = 'valid', seq_duration=5.0)
+        print(len(train_dataset))
+        print(len(validation_set))
         mean, scale = findMeanScale(train_dataset)
 
         # why train on small batches instead of all of data at once: 
         # https://datascience.stackexchange.com/questions/16807/why-mini-batch-size-is-better-than-one-single-batch-with-all-training-data
         # we shuffle the data into new batches at every epoch
-        train_sampler = torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True)
+        train_sampler = torch.utils.data.DataLoader(train_dataset, batch_size=8, shuffle=True)
         valid_sampler = torch.utils.data.DataLoader(validation_set, batch_size=len(validation_set), shuffle=True) 
         print('Training on {} tracks'.format(len(train_dataset)))
         print('Validating on {} tracks'.format(len(validation_set)))
