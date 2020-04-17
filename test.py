@@ -4,9 +4,12 @@ import torch.utils.data
 import scipy.signal
 from scipy.io.wavfile import write as saveWAV
 import numpy as np
+import random
+random.seed(7)
 
 import norbert                         # https://github.com/sigsep/norbert
 import sounddevice as sd
+import librosa
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -63,8 +66,10 @@ def getEstimate(track_audio, model_file = 'unmixer.pickle', device = 'cpu'):
     return estimate
 
 
-
-if __name__ == '__main__':
+'''
+TODO: Add optional saving and place function into class along with testLocal. Models are then loaded from state
+'''
+def testMUSDB():
     checkUnseen = True
 
     musTracks = musdb.DB(download=True, subsets='test' if checkUnseen else 'train')
@@ -76,9 +81,50 @@ if __name__ == '__main__':
     saveWAV('original_mix_111.wav', track.rate, track.audio)
     saveWAV('separated_vocals_111.wav', track.rate, estimate)
 
+    print(track.rate)
+    print(track.audio.shape)
+
     print('Playing original track')
     sd.play(track.audio, track.rate, blocking = True)
     print('Playing estimated vocal track')
     sd.play(estimate, track.rate, blocking = True)
     print('Playing poor estimated vocal track')
     sd.play(estimateBad, track.rate, blocking=True)
+
+# Grabs a sequence of length @duration seconds from @audio with @sample_rate
+def grabSequence(audio, sample_rate, duration = 10, grabRandom = True):
+    total_samples = audio.shape[0]
+    seq_samples = duration*sample_rate
+    if seq_samples >= total_samples:
+        print('ERR: Requested sequence duration is longer than track')
+        quit()
+    
+    start = random.randint(0, total_samples-seq_samples) if grabRandom else 0
+    return audio[start:start+seq_samples, ...]
+    
+
+
+def testLocal(filePath, savePath = '', sample_rate = 44100):
+    audio, _ = librosa.load(filePath, sr = sample_rate, mono = False)
+
+    # if audio is Mono
+    if len(audio.shape) == 1:
+        audio = audio.reshape(audio.shape[0], 1)
+    else:
+        audio = audio.T
+
+    print(audio.shape)
+    audio = grabSequence(audio, sample_rate)
+    print(audio.shape)
+    estimate = getEstimate(audio, 'unmixer2.pickle')
+
+    if savePath:
+        saveWAV(savePath, sample_rate, estimate)
+    
+    sd.play(estimate, sample_rate, blocking=True)
+
+
+if __name__ == '__main__':
+    #testLocal('/Users/xavierboudreau/Music/iTunes/iTunes Media/Music/Drake/Take Care (Deluxe Version)/10 Make Me Proud (feat. Nicki Minaj).m4a', 'Drake Make Me Proud - separated.wav')
+    #testMUSDB()
+    pass
