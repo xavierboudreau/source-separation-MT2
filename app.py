@@ -7,6 +7,8 @@ from flask_cors import CORS
 
 import graphene
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
+from graphene_file_upload.scalars import Upload
+from graphene_file_upload.flask import FileUploadGraphQLView
 
 import os
 import csv
@@ -55,17 +57,33 @@ class EpochObject(SQLAlchemyObjectType):
         model = Epoch
         interfaces = (graphene.relay.Node, )
 
+class MyUpload(graphene.Mutation):
+    class Arguments:
+        file_in = Upload()
+
+    ok = graphene.Boolean()
+
+    def mutate(self, info, file_in):
+        print(info)
+        for line in file_in:
+            print(line)
+        return MyUpload(ok=True)
+
 class Query(graphene.ObjectType):
     node = graphene.relay.Node.Field()
     all_epochs = SQLAlchemyConnectionField(EpochObject)
 
-schema = graphene.Schema(query=Query)
+class Mutation(graphene.ObjectType):
+    my_upload = MyUpload.Field()
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
 
 
 # Routes
 app.add_url_rule(
     '/graphql',
-    view_func=GraphQLView.as_view(
+    # FileUploadGraphQLView instead of GraphQLView
+    view_func=FileUploadGraphQLView.as_view( 
         'graphql',
         schema=schema,
         graphiql=True # for having the GraphiQL interface
@@ -94,7 +112,6 @@ if __name__ == '__main__':
 
     # run web server
     #app.run()
-    
     
     app.run(host=HOST,
             debug=True,  # automatic reloading enabled
