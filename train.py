@@ -194,7 +194,7 @@ if __name__ == '__main__':
 
             valid_loss = validation_loss(valid_sampler, unmix)
             model_stats.update(i, losses.avg, valid_loss)
-            save_to_pickle(unmix, 'model_epoch_{}.pickle'.format(i+1))
+            save_to_pickle(unmix, 'intermediate_models/Epoch {}.pickle'.format(i+1))
             print('Training loss: {}'.format(losses.avg))
             print('Validation loss: {}'.format(valid_loss))
 

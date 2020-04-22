@@ -3,6 +3,7 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_graphql import GraphQLView
+from werkzeug.utils import secure_filename
 from flask_cors import CORS
 
 import graphene
@@ -33,6 +34,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +    os.path.join(basedir, 
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
+UPLOAD_FOLDER = './client-files'
+MODEL_FOLDER = './intermediate_models'
+ALLOWED_EXTENSIONS = {'txt', 'js', 'md','png', 'mp3', 'wav', 'm4a'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 # Modules
 db = SQLAlchemy(app)
@@ -57,44 +66,49 @@ class EpochObject(SQLAlchemyObjectType):
         model = Epoch
         interfaces = (graphene.relay.Node, )
 
-class MyUpload(graphene.Mutation):
-    class Arguments:
-        file_in = Upload()
-
-    ok = graphene.Boolean()
-
-    def mutate(self, info, file_in):
-        print(info)
-        for line in file_in:
-            print(line)
-        return MyUpload(ok=True)
-
 class Query(graphene.ObjectType):
     node = graphene.relay.Node.Field()
     all_epochs = SQLAlchemyConnectionField(EpochObject)
 
-class Mutation(graphene.ObjectType):
-    my_upload = MyUpload.Field()
-
-schema = graphene.Schema(query=Query, mutation=Mutation)
+schema = graphene.Schema(query=Query)
 
 
 # Routes
 app.add_url_rule(
     '/graphql',
-    # FileUploadGraphQLView instead of GraphQLView
-    view_func=FileUploadGraphQLView.as_view( 
+    view_func=GraphQLView.as_view( 
         'graphql',
         schema=schema,
         graphiql=True # for having the GraphiQL interface
     )
 )
 
-'''
-@app.route('/api/hello', methods=['GET'])
-def hello():
-    return jsonify({'message': 'hello'})
-'''
+@app.route('/upload', methods=['POST'])
+def uploadEndpoint():
+    f = request.files['file']
+    filename = secure_filename(f.filename)
+    print(filename)
+    
+    if f and allowed_file(filename):
+        f.save(os.path.join(UPLOAD_FOLDER, filename))
+
+        return jsonify({'upload_success': 'true'})
+
+#TODO: This would be better as a GraphQL endpoint
+@app.route('/my-files', methods=['GET'])
+def myFilesEndpoint():
+    filenames = os.listdir(UPLOAD_FOLDER)
+    return jsonify({'files': filenames})
+
+@app.route('/my-models', methods=['GET'])
+def myModelsEndpoint():
+    filenames = sorted(os.listdir(MODEL_FOLDER))
+    return jsonify({'files': filenames})
+
+@app.route('/separate', methods=['POST'])
+def separationEndpoint():
+    return jsonify({'success': True})
+
 
 if __name__ == '__main__':
     # Always read file from CSV
