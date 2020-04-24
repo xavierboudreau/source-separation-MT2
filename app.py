@@ -1,6 +1,6 @@
 # API endpoint for webapp
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_graphql import GraphQLView
 from werkzeug.utils import secure_filename
@@ -13,6 +13,7 @@ from graphene_file_upload.flask import FileUploadGraphQLView
 
 import os
 import csv
+from test import testLocal
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 #HOST = '0.0.0.0'
@@ -35,13 +36,23 @@ app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 UPLOAD_FOLDER = './client-files'
+RESULT_FOLDER = './client-separation-results'
 MODEL_FOLDER = './intermediate_models'
-ALLOWED_EXTENSIONS = {'txt', 'js', 'md','png', 'mp3', 'wav', 'm4a'}
+# This represents a NoOp model (i.e. return original audio)
+IDENTITY_MODEL = 'Identity'
+ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a'}
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+def findFileByName(target, folder = UPLOAD_FOLDER):
+    files = os.listdir(folder)
+
+    for filename in files:
+        if target in filename.rsplit('.',1)[0]:
+            return filename
 
 # Modules
 db = SQLAlchemy(app)
@@ -86,7 +97,7 @@ app.add_url_rule(
 @app.route('/upload', methods=['POST'])
 def uploadEndpoint():
     f = request.files['file']
-    filename = secure_filename(f.filename)
+    filename = secure_filename(f.filename).replace('_', ' ')
     print(filename)
     
     if f and allowed_file(filename):
@@ -97,18 +108,33 @@ def uploadEndpoint():
 #TODO: This would be better as a GraphQL endpoint
 @app.route('/my-files', methods=['GET'])
 def myFilesEndpoint():
-    filenames = os.listdir(UPLOAD_FOLDER)
+    filenames = sorted(list(map(lambda file: file[:file.index('.')], os.listdir(UPLOAD_FOLDER))))
     return jsonify({'files': filenames})
 
 @app.route('/my-models', methods=['GET'])
 def myModelsEndpoint():
-    filenames = sorted(os.listdir(MODEL_FOLDER))
+    # Give the client the models sorted by Epoch, with the Production model first
+    def sortKey(A):
+        if A == 'Production Unmixer':
+            return 0
+        return int(A.split('Epoch ')[1])
+
+    filenames = sorted( list(map(lambda file: file[:file.index('.')], os.listdir(MODEL_FOLDER)) ), key = sortKey)
+    filenames.append(IDENTITY_MODEL)
     return jsonify({'files': filenames})
 
 @app.route('/separate', methods=['POST'])
 def separationEndpoint():
-    return jsonify({'success': True})
+    props = request.get_json()
+    
+    model_path = None if props['modelname'] == IDENTITY_MODEL else '{}/{}.pickle'.format(MODEL_FOLDER, props['modelname'])
+    result_savepath = '{}/{}.mp3'.format(RESULT_FOLDER, props['filename'])
+    test_filename = '{}/{}'.format(UPLOAD_FOLDER, findFileByName(props['filename']))
 
+    testLocal(test_filename, result_savepath, model_path)
+    return send_file(result_savepath)
+
+    
 
 if __name__ == '__main__':
     # Always read file from CSV

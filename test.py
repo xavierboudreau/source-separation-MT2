@@ -2,7 +2,8 @@ import torch.utils
 import torch
 import torch.utils.data
 import scipy.signal
-from scipy.io.wavfile import write as saveWAV
+from scipy.io.wavfile import write as writeWAV
+from writeMP3 import writeMP3
 import numpy as np
 import random
 random.seed(7)
@@ -96,15 +97,15 @@ def grabSequence(audio, sample_rate, duration = 10, grabRandom = True):
     total_samples = audio.shape[0]
     seq_samples = duration*sample_rate
     if seq_samples >= total_samples:
-        print('ERR: Requested sequence duration is longer than track')
-        quit()
+        print('ERR: Requested sequence duration is longer than track. Defaulting to entire track.')
+        return audio
     
     start = random.randint(0, total_samples-seq_samples) if grabRandom else 0
     return audio[start:start+seq_samples, ...]
     
 
 
-def testLocal(filePath, savePath = '', sample_rate = 44100):
+def testLocal(filePath, savePath = '', modelPath = 'intermediate_models/Production Unmixer.pickle', sample_rate = 44100, playWhenDone = False):
     audio, _ = librosa.load(filePath, sr = sample_rate, mono = False)
 
     # if audio is Mono
@@ -113,18 +114,20 @@ def testLocal(filePath, savePath = '', sample_rate = 44100):
     else:
         audio = audio.T
 
-    print(audio.shape)
     audio = grabSequence(audio, sample_rate)
-    print(audio.shape)
-    estimate = getEstimate(audio, 'unmixer2.pickle')
+    estimate = getEstimate(audio, modelPath) if modelPath else audio
 
     if savePath:
-        saveWAV(savePath, sample_rate, estimate)
+        if ('.mp3' in savePath[-4:].lower()):
+            writeMP3(savePath, estimate, sample_rate)
+        elif ('.wav' in savePath[-4:].lower()):
+            writeWAV(savePath, sample_rate, estimate)
     
-    sd.play(estimate, sample_rate, blocking=True)
+    if playWhenDone:
+        sd.play(estimate, sample_rate, blocking=True)
 
 
 if __name__ == '__main__':
-    #testLocal('/Users/xavierboudreau/Music/iTunes/iTunes Media/Music/Drake/Take Care (Deluxe Version)/10 Make Me Proud (feat. Nicki Minaj).m4a', 'Drake Make Me Proud - separated.wav')
+    testLocal('/Users/xavierboudreau/Music/iTunes/iTunes Media/Music/Drake/Take Care (Deluxe Version)/10 Make Me Proud (feat. Nicki Minaj).m4a', 'Drake Make Me Proud - separated.wav')
     #testMUSDB()
     pass
