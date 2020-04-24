@@ -17,6 +17,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import musdb
 from pickle_operations import *
+import sys
 
 # inverse short time fourier transform
 def istft(X, rate=44100, n_fft=4096, n_hopsize=1024):
@@ -122,12 +123,16 @@ def testLocal(filePath, savePath = '', modelPath = 'intermediate_models/Producti
             writeMP3(savePath, estimate, sample_rate)
         elif ('.wav' in savePath[-4:].lower()):
             writeWAV(savePath, sample_rate, estimate)
+        else:
+            print('File extension in SAVEPATH not supported. Trying ending with .wav or .mp3')
     
     if playWhenDone:
         sd.play(estimate, sample_rate, blocking=True)
 
 
 if __name__ == '__main__':
-    testLocal('/Users/xavierboudreau/Music/iTunes/iTunes Media/Music/Drake/Take Care (Deluxe Version)/10 Make Me Proud (feat. Nicki Minaj).m4a', 'Drake Make Me Proud - separated.wav')
-    #testMUSDB()
-    pass
+    if len(sys.argv) != 4:
+        print('Must run as:\npython test.py FILEPATH SAVEPATH MODELPATH')
+        
+    else:
+        testLocal(sys.argv[1], savePath = sys.argv[2], modelPath = sys.argv[3])

@@ -17,6 +17,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import random
 random.seed(1)
+import sys
 
 import musdb
 import model
@@ -127,12 +128,13 @@ def validation_loss(valid_sampler, unmix):
 
 if __name__ == '__main__':
     TRAIN = True
+    DEMO = '-demo' in sys.argv
 
     device = device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if TRAIN:
-        train_dataset = SimpleMUSDBDataset(seq_duration=5.0)
-        validation_set = SimpleMUSDBDataset(split = 'valid', seq_duration=5.0)
+        train_dataset = SimpleMUSDBDataset(seq_duration=5.0, use_demo_data=DEMO)
+        validation_set = SimpleMUSDBDataset(split = 'valid', seq_duration=5.0, use_demo_data=DEMO)
         print(len(train_dataset))
         print(len(validation_set))
         mean, scale = findMeanScale(train_dataset)

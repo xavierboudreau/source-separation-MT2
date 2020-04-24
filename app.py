@@ -16,8 +16,6 @@ import csv
 from test import testLocal
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-#HOST = '0.0.0.0'
-#PORT = 8000
 
 HOST = 'localhost'
 PORT = 8001
@@ -105,7 +103,7 @@ def uploadEndpoint():
 
         return jsonify({'upload_success': 'true'})
 
-#TODO: This would be better as a GraphQL endpoint
+
 @app.route('/my-files', methods=['GET'])
 def myFilesEndpoint():
     filenames = sorted(list(map(lambda file: file[:file.index('.')], os.listdir(UPLOAD_FOLDER))))
