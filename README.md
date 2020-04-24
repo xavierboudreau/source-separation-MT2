@@ -1,7 +1,10 @@
 # source-separation-MT2
 Using the neural network design of [UMX](https://github.com/sigsep/open-unmix-pytorch), this project trains a model to separate vocals from a file of music. It also includes a [web app](https://github.com/xavierboudreau/source-separation-MT2-website) to present the model interactively.
 
-Be sure you have [miniconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/), then initially create conda environment using:   
+## Environment
+Clone the repo with  
+`> git clone https://github.com/xavierboudreau/source-separation-MT2`  
+Be sure you have [miniconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/), then create conda environment using:   
 `> conda env create -f environment-cpu-osx.yml`  
 To activate this environment, use:  
 `> source activate source-separation-MT2`  
