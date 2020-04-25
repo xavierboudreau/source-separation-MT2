@@ -68,9 +68,6 @@ def getEstimate(track_audio, model_file = 'unmixer.pickle', device = 'cpu'):
     return estimate
 
 
-'''
-TODO: Add optional saving and place function into class along with testLocal. Models are then loaded from state
-'''
 def testMUSDB():
     checkUnseen = True
 
@@ -80,8 +77,8 @@ def testMUSDB():
 
     estimate = getEstimate(track.audio, 'unmixer2.pickle')
     estimateBad = getEstimate(track.audio, 'unmixer.pickle')
-    saveWAV('original_mix_111.wav', track.rate, track.audio)
-    saveWAV('separated_vocals_111.wav', track.rate, estimate)
+    writeWAV('original_mix_111.wav', track.rate, track.audio)
+    writeWAV('separated_vocals_111.wav', track.rate, estimate)
 
     print(track.rate)
     print(track.audio.shape)

@@ -129,14 +129,14 @@ def validation_loss(valid_sampler, unmix):
 if __name__ == '__main__':
     TRAIN = True
     DEMO = '-demo' in sys.argv
+    # seq_duration represents how long of a sample we grab from each track
+    seq_duration = 12.9
 
     device = device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if TRAIN:
-        train_dataset = SimpleMUSDBDataset(seq_duration=5.0, use_demo_data=DEMO)
-        validation_set = SimpleMUSDBDataset(split = 'valid', seq_duration=5.0, use_demo_data=DEMO)
-        print(len(train_dataset))
-        print(len(validation_set))
+        train_dataset = SimpleMUSDBDataset(seq_duration=seq_duration, use_demo_data=DEMO)
+        validation_set = SimpleMUSDBDataset(split = 'valid', seq_duration=seq_duration, use_demo_data=DEMO)
         mean, scale = findMeanScale(train_dataset)
 
         # why train on small batches instead of all of data at once: 
@@ -169,7 +169,7 @@ if __name__ == '__main__':
         model_cache = unmix
 
         # num_epochs is the number of times that our model gets to see the entire dataset
-        num_epochs = 30
+        num_epochs = 60
         model_stats = LossStats(num_epochs)
 
         for i in range(num_epochs):
@@ -206,4 +206,4 @@ if __name__ == '__main__':
                 print('\tNew best! :D')
 
         model_stats.to_csv('model_stats.csv')
-        save_to_pickle(model_cache, 'unmixer2.pickle')
+        save_to_pickle(model_cache, 'intermediate_models/Production Unmixer.pickle')

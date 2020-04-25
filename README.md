@@ -15,14 +15,14 @@ To update the yml file (when new packages were installed through conda)
 ## Server
 The server for the web app can be run with  
 `> python app.py`  
-Two directories, should be made to store data from the client  
+Two directories should be made to store data from the client  
 `> mkdir client-files`  
 `> mkdir client-separation-results`
 ### Endpoints
 `/graphql`  
 Get Epoch objects representing statistics during training  
 `/upload`  
-Upload a `MP3`, `WAV`, `M4A` to `client-files`  
+Upload a `MP3`, `WAV`, or `M4A` to `client-files`  
 `/my-files`  
 Get filenames in `client-files`  
 `/my-models`  
@@ -30,7 +30,7 @@ Get model names in `intermediate_models`
 `/separate`  
 Given a filename and model name, estimate the vocal track
 ## Training
-Uses the network design from UMX and the data from [MUSDB](https://sigsep.github.io/datasets/musdb.html) to train the model. I add [early stopping](https://en.wikipedia.org/wiki/Early_stopping) and record the training and validation loss for each epoch in `model_stats.csv`. For each epoch I sample a random sequence of 5 seconds of each track from the training and validation sets. The short duration makes training this model feasible on my 4GB machine.
+Uses the network design from UMX and the data from [MUSDB](https://sigsep.github.io/datasets/musdb.html) to train the model. I add [early stopping](https://en.wikipedia.org/wiki/Early_stopping) and record the training and validation loss for each epoch in `model_stats.csv`. For each epoch I sample a random sequence of 13 seconds of each track from the training and validation sets. The short sample duration makes training this model feasible on my 4GB machine.
 
 To train run  
 `> python train.py`  
