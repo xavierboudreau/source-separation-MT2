@@ -1,5 +1,7 @@
 # source-separation-MT2
 Using the neural network design of [UMX](https://github.com/sigsep/open-unmix-pytorch), this project trains a model to separate vocals from a file of music. It also includes a [web app](https://github.com/xavierboudreau/source-separation-MT2-website) to present the model interactively.
+## Demo of client usage
+[![Demo video](http://img.youtube.com/vi/2bpY5lM7T-A/0.jpg)](http://www.youtube.com/watch?v=2bpY5lM7T-A)
 
 ## Environment
 Clone the repo with  
